@@ -914,7 +914,12 @@
                 <!-- Form -->
                 <div class="lg:col-span-7 reveal">
                     <div class="bg-bg-page border border-border-subtle rounded-4xl p-8 md:p-12">
-                        <form id="inquiryForm" class="space-y-5" novalidate>
+                        <form id="inquiryForm" class="space-y-5" action="https://formsubmit.co/benedu.insight@gmail.com" method="POST" novalidate>
+                            <!-- FormSubmit hidden controls -->
+                            <input type="hidden" name="_subject" value="[Benedu Insight] 신규 강의 문의">
+                            <input type="hidden" name="_captcha" value="false">
+                            <input type="hidden" name="_template" value="table">
+                            <input type="text" name="_honey" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;">
                             <div class="grid md:grid-cols-2 gap-5">
                                 <div>
                                     <label for="company" class="block text-[13px] font-semibold text-brand-charcoal mb-2">회사 / 기관명 <span class="text-brand-purple">*</span></label>
@@ -1077,12 +1082,42 @@
         const form = document.getElementById('inquiryForm');
         const modal = document.getElementById('successModal');
 
-        form.addEventListener('submit', (e) => {
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const submitBtnHTML = submitBtn ? submitBtn.innerHTML : '';
+
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            // Simulated send
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            form.reset();
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '전송 중…';
+            }
+
+            try {
+                const data = new FormData(form);
+                const res = await fetch('https://formsubmit.co/ajax/benedu.insight@gmail.com', {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json' },
+                    body: data
+                });
+
+                if (!res.ok) throw new Error('Network response was not ok');
+
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                form.reset();
+            } catch (err) {
+                alert('전송에 실패했습니다. 잠시 후 다시 시도하시거나 benedu.insight@gmail.com 으로 직접 메일 부탁드립니다.');
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = submitBtnHTML;
+                }
+            }
         });
 
         function closeModal() {
@@ -1104,11 +1139,12 @@
                 if (sec && sec.offsetTop <= pos) current = id;
             });
             navLinks.forEach(a => {
+                if (a.classList.contains('btn-primary')) return;
                 const href = a.getAttribute('href');
                 if (href === `#${current}`) {
                     a.classList.add('text-brand-purple','font-semibold');
                     a.classList.remove('text-brand-charcoal','font-medium');
-                } else if (href?.startsWith('#') && !a.classList.contains('btn-primary')) {
+                } else if (href?.startsWith('#')) {
                     a.classList.remove('text-brand-purple','font-semibold');
                     a.classList.add('text-brand-charcoal','font-medium');
                 }
